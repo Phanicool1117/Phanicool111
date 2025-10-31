@@ -1,9 +1,42 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
+
+// Simple in-memory rate limiting
+const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
+const RATE_LIMIT = 10; // requests per minute
+const RATE_WINDOW = 60000; // 1 minute in ms
+
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now();
+  const record = rateLimitMap.get(ip);
+
+  if (!record || now > record.resetTime) {
+    rateLimitMap.set(ip, { count: 1, resetTime: now + RATE_WINDOW });
+    return true;
+  }
+
+  if (record.count >= RATE_LIMIT) {
+    return false;
+  }
+
+  record.count++;
+  return true;
+}
+
+// Input validation schema
+const messageSchema = z.object({
+  messages: z.array(
+    z.object({
+      role: z.enum(['user', 'assistant']),
+      content: z.string().min(1).max(4000)
+    })
+  ).min(1).max(50)
+});
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -11,7 +44,38 @@ serve(async (req) => {
   }
 
   try {
-    const { messages } = await req.json();
+    // Rate limiting
+    const clientIp = req.headers.get("x-forwarded-for") || "unknown";
+    if (!checkRateLimit(clientIp)) {
+      console.log(`Rate limit exceeded for IP: ${clientIp}`);
+      return new Response(
+        JSON.stringify({ error: "Rate limit exceeded. Please try again later." }),
+        {
+          status: 429,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    // Input validation
+    const body = await req.json();
+    const validationResult = messageSchema.safeParse(body);
+    
+    if (!validationResult.success) {
+      console.log("Validation error:", validationResult.error);
+      return new Response(
+        JSON.stringify({ 
+          error: "Invalid input format. Please check your message structure.",
+          details: validationResult.error.issues 
+        }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    const { messages } = validationResult.data;
     const GROQ_API_KEY = Deno.env.get("GROQ_API_KEY");
     
     if (!GROQ_API_KEY) {
