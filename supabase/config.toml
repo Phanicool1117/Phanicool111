@@ -2,3 +2,6 @@ project_id = "nrxeiwnqgfctijkuxnnb"
 
 [functions.diet-chat]
 verify_jwt = false
+
+[functions.food-search]
+verify_jwt = false

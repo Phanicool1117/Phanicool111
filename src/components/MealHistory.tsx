@@ -12,6 +12,9 @@ type Meal = {
   meal_date: string;
   calories?: number;
   protein?: number;
+  carbs?: number;
+  fat?: number;
+  serving_info?: string;
   notes?: string;
   created_at: string;
 };
@@ -92,6 +95,9 @@ export const MealHistory = () => {
                   <p className="text-sm text-muted-foreground">
                     {format(new Date(meal.meal_date), "MMM d, yyyy")}
                   </p>
+                  {meal.serving_info && (
+                    <p className="text-xs text-muted-foreground">{meal.serving_info}</p>
+                  )}
                   {meal.notes && (
                     <p className="text-sm text-muted-foreground italic">{meal.notes}</p>
                   )}
@@ -100,9 +106,11 @@ export const MealHistory = () => {
                   {meal.calories && (
                     <p className="text-sm font-medium">{meal.calories} cal</p>
                   )}
-                  {meal.protein && (
-                    <p className="text-xs text-muted-foreground">{meal.protein}g protein</p>
-                  )}
+                  <div className="text-xs text-muted-foreground space-y-0.5">
+                    {meal.protein !== undefined && <p>P: {meal.protein}g</p>}
+                    {meal.carbs !== undefined && <p>C: {meal.carbs}g</p>}
+                    {meal.fat !== undefined && <p>F: {meal.fat}g</p>}
+                  </div>
                 </div>
               </div>
             ))}

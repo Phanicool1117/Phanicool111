@@ -8,6 +8,8 @@ export const DietStats = () => {
   const [weeklyStats, setWeeklyStats] = useState({
     calories: 0,
     protein: 0,
+    carbs: 0,
+    fat: 0,
     meals: 0,
     avgCalories: 0,
   });
@@ -42,11 +44,15 @@ export const DietStats = () => {
 
       const totalCalories = weeklyMeals.reduce((sum: number, meal: any) => sum + (meal.calories || 0), 0);
       const totalProtein = weeklyMeals.reduce((sum: number, meal: any) => sum + (Number(meal.protein) || 0), 0);
+      const totalCarbs = weeklyMeals.reduce((sum: number, meal: any) => sum + (Number(meal.carbs) || 0), 0);
+      const totalFat = weeklyMeals.reduce((sum: number, meal: any) => sum + (Number(meal.fat) || 0), 0);
       const totalMeals = weeklyMeals.length;
 
       setWeeklyStats({
         calories: totalCalories,
         protein: Math.round(totalProtein),
+        carbs: Math.round(totalCarbs),
+        fat: Math.round(totalFat),
         meals: totalMeals,
         avgCalories: totalMeals > 0 ? Math.round(totalCalories / totalMeals) : 0,
       });
@@ -87,22 +93,46 @@ export const DietStats = () => {
   ];
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-      {stats.map((stat) => {
-        const Icon = stat.icon;
-        return (
-          <Card key={stat.title}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
-              <Icon className={`h-4 w-4 ${stat.color}`} />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stat.value}</div>
-              <p className="text-xs text-muted-foreground">{stat.unit}</p>
-            </CardContent>
-          </Card>
-        );
-      })}
+    <div className="space-y-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {stats.map((stat) => {
+          const Icon = stat.icon;
+          return (
+            <Card key={stat.title}>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
+                <Icon className={`h-4 w-4 ${stat.color}`} />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stat.value}</div>
+                <p className="text-xs text-muted-foreground">{stat.unit}</p>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-sm font-medium">Weekly Macros</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-3 gap-4 text-center">
+            <div className="space-y-1">
+              <p className="text-2xl font-bold text-blue-500">{weeklyStats.protein}g</p>
+              <p className="text-xs text-muted-foreground">Protein</p>
+            </div>
+            <div className="space-y-1">
+              <p className="text-2xl font-bold text-yellow-500">{weeklyStats.carbs}g</p>
+              <p className="text-xs text-muted-foreground">Carbs</p>
+            </div>
+            <div className="space-y-1">
+              <p className="text-2xl font-bold text-orange-500">{weeklyStats.fat}g</p>
+              <p className="text-xs text-muted-foreground">Fat</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
