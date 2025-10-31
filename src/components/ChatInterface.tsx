@@ -4,8 +4,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Send, Loader2 } from "lucide-react";
 import { ChatMessage } from "./ChatMessage";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+
+const STORAGE_KEY = 'diet_chat_messages';
 
 type Message = {
   role: "user" | "assistant";
@@ -14,48 +14,58 @@ type Message = {
 
 export const ChatInterface = () => {
   const [input, setInput] = useState("");
+  const [messages, setMessages] = useState<Message[]>([]);
   const [isStreaming, setIsStreaming] = useState(false);
   const [streamingContent, setStreamingContent] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const queryClient = useQueryClient();
 
-  const { data: messages = [], isLoading } = useQuery({
-    queryKey: ["chat-messages"],
-    queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return [];
+  useEffect(() => {
+    loadMessages();
+  }, []);
 
-      const { data, error } = await supabase
-        .from("chat_messages")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: true });
+  const loadMessages = () => {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        setMessages(JSON.parse(stored));
+      }
+    } catch (error) {
+      console.error('Error loading messages:', error);
+    }
+  };
 
-      if (error) throw error;
-      return data.map((msg) => ({
-        role: msg.role as "user" | "assistant",
-        content: msg.content,
-      }));
-    },
-  });
+  const saveMessages = (msgs: Message[]) => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(msgs));
+    } catch (error) {
+      console.error('Error saving messages:', error);
+    }
+  };
 
-  const saveMutation = useMutation({
-    mutationFn: async ({ role, content }: { role: string; content: string }) => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Not authenticated");
-
-      const { error } = await supabase.from("chat_messages").insert({
-        user_id: user.id,
-        role,
-        content,
-      });
-
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["chat-messages"] });
-    },
-  });
+  const saveMeal = (mealData: any) => {
+    try {
+      const stored = localStorage.getItem('diet_meals');
+      const meals = stored ? JSON.parse(stored) : [];
+      
+      const newMeal = {
+        id: crypto.randomUUID(),
+        ...mealData,
+        meal_date: new Date().toISOString().split('T')[0],
+        created_at: new Date().toISOString(),
+      };
+      
+      meals.push(newMeal);
+      localStorage.setItem('diet_meals', JSON.stringify(meals));
+      
+      // Trigger event for other components to update
+      window.dispatchEvent(new Event('meals-updated'));
+      
+      toast.success('Meal logged successfully! 🎉');
+    } catch (error) {
+      console.error('Error saving meal:', error);
+      toast.error('Failed to save meal data');
+    }
+  };
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -70,23 +80,23 @@ export const ChatInterface = () => {
     if (!input.trim() || isStreaming) return;
 
     const userMessage = input.trim();
+    const newMessages = [...messages, { role: "user" as const, content: userMessage }];
+    setMessages(newMessages);
+    saveMessages(newMessages);
     setInput("");
     setIsStreaming(true);
     setStreamingContent("");
 
     try {
-      await saveMutation.mutateAsync({ role: "user", content: userMessage });
-
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/diet-chat`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
           },
           body: JSON.stringify({
-            messages: [...messages, { role: "user", content: userMessage }],
+            messages: newMessages,
           }),
         }
       );
@@ -135,10 +145,20 @@ export const ChatInterface = () => {
       }
 
       if (accumulatedContent) {
-        await saveMutation.mutateAsync({
-          role: "assistant",
-          content: accumulatedContent,
-        });
+        const finalMessages = [...newMessages, { role: "assistant" as const, content: accumulatedContent }];
+        setMessages(finalMessages);
+        saveMessages(finalMessages);
+        
+        // Extract and save meal data from JSON code blocks
+        const jsonMatch = accumulatedContent.match(/```json\s*\n([\s\S]*?)\n```/);
+        if (jsonMatch) {
+          try {
+            const mealData = JSON.parse(jsonMatch[1]);
+            saveMeal(mealData);
+          } catch (error) {
+            console.error('Error parsing meal data:', error);
+          }
+        }
       }
     } catch (error) {
       console.error("Chat error:", error);
@@ -148,14 +168,6 @@ export const ChatInterface = () => {
       setStreamingContent("");
     }
   };
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
 
   return (
     <div className="flex flex-col h-full">

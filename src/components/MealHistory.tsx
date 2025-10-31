@@ -1,29 +1,51 @@
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
-import { Loader2 } from "lucide-react";
+
+const STORAGE_KEY = 'diet_meals';
+
+type Meal = {
+  id: string;
+  meal_name: string;
+  meal_type?: string;
+  meal_date: string;
+  calories?: number;
+  protein?: number;
+  notes?: string;
+  created_at: string;
+};
 
 export const MealHistory = () => {
-  const { data: meals, isLoading } = useQuery({
-    queryKey: ["recent-meals"],
-    queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return [];
+  const [meals, setMeals] = useState<Meal[]>([]);
 
-      const { data, error } = await supabase
-        .from("meals")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("meal_date", { ascending: false })
-        .order("created_at", { ascending: false })
-        .limit(10);
+  useEffect(() => {
+    fetchRecentMeals();
+    
+    const handleStorage = () => fetchRecentMeals();
+    window.addEventListener('storage', handleStorage);
+    window.addEventListener('meals-updated', handleStorage);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorage);
+      window.removeEventListener('meals-updated', handleStorage);
+    };
+  }, []);
 
-      if (error) throw error;
-      return data;
-    },
-  });
+  const fetchRecentMeals = () => {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (!stored) return;
+      
+      const allMeals = JSON.parse(stored);
+      const sorted = allMeals.sort((a: Meal, b: Meal) => 
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+      setMeals(sorted.slice(0, 10));
+    } catch (error) {
+      console.error('Error fetching meals:', error);
+    }
+  };
 
   const getMealTypeColor = (type: string) => {
     switch (type) {
@@ -40,16 +62,6 @@ export const MealHistory = () => {
     }
   };
 
-  if (isLoading) {
-    return (
-      <Card>
-        <CardContent className="flex items-center justify-center h-48">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </CardContent>
-      </Card>
-    );
-  }
-
   return (
     <Card>
       <CardHeader>
@@ -57,7 +69,7 @@ export const MealHistory = () => {
         <CardDescription>Your latest meal entries</CardDescription>
       </CardHeader>
       <CardContent>
-        {!meals || meals.length === 0 ? (
+        {meals.length === 0 ? (
           <p className="text-center text-muted-foreground py-8">
             No meals logged yet. Start chatting to track your first meal!
           </p>

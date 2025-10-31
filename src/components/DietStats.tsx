@@ -1,66 +1,85 @@
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useEffect, useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Apple, Flame, TrendingUp, Utensils } from "lucide-react";
-import { format, startOfWeek, endOfWeek } from "date-fns";
+
+const STORAGE_KEY = 'diet_meals';
 
 export const DietStats = () => {
-  const { data: weeklyStats } = useQuery({
-    queryKey: ["weekly-stats"],
-    queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return null;
+  const [weeklyStats, setWeeklyStats] = useState({
+    calories: 0,
+    protein: 0,
+    meals: 0,
+    avgCalories: 0,
+  });
 
-      const weekStart = format(startOfWeek(new Date()), "yyyy-MM-dd");
-      const weekEnd = format(endOfWeek(new Date()), "yyyy-MM-dd");
+  useEffect(() => {
+    fetchWeeklyStats();
+    
+    const handleStorage = () => fetchWeeklyStats();
+    window.addEventListener('storage', handleStorage);
+    window.addEventListener('meals-updated', handleStorage);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorage);
+      window.removeEventListener('meals-updated', handleStorage);
+    };
+  }, []);
 
-      const { data, error } = await supabase
-        .from("meals")
-        .select("*")
-        .eq("user_id", user.id)
-        .gte("meal_date", weekStart)
-        .lte("meal_date", weekEnd);
+  const fetchWeeklyStats = () => {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (!stored) return;
+      
+      const meals = JSON.parse(stored);
+      const today = new Date();
+      const sevenDaysAgo = new Date(today);
+      sevenDaysAgo.setDate(today.getDate() - 7);
 
-      if (error) throw error;
+      const weeklyMeals = meals.filter((meal: any) => {
+        const mealDate = new Date(meal.meal_date);
+        return mealDate >= sevenDaysAgo && mealDate <= today;
+      });
 
-      const totalCalories = data.reduce((sum, meal) => sum + (meal.calories || 0), 0);
-      const totalProtein = data.reduce((sum, meal) => sum + (Number(meal.protein) || 0), 0);
-      const totalMeals = data.length;
+      const totalCalories = weeklyMeals.reduce((sum: number, meal: any) => sum + (meal.calories || 0), 0);
+      const totalProtein = weeklyMeals.reduce((sum: number, meal: any) => sum + (Number(meal.protein) || 0), 0);
+      const totalMeals = weeklyMeals.length;
 
-      return {
+      setWeeklyStats({
         calories: totalCalories,
         protein: Math.round(totalProtein),
         meals: totalMeals,
         avgCalories: totalMeals > 0 ? Math.round(totalCalories / totalMeals) : 0,
-      };
-    },
-  });
+      });
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+    }
+  };
 
   const stats = [
     {
       title: "This Week",
-      value: weeklyStats?.calories || 0,
+      value: weeklyStats.calories,
       unit: "calories",
       icon: Flame,
       color: "text-orange-500",
     },
     {
       title: "Protein",
-      value: weeklyStats?.protein || 0,
+      value: weeklyStats.protein,
       unit: "grams",
       icon: Apple,
       color: "text-primary",
     },
     {
       title: "Meals Logged",
-      value: weeklyStats?.meals || 0,
+      value: weeklyStats.meals,
       unit: "meals",
       icon: Utensils,
       color: "text-accent",
     },
     {
       title: "Avg per Meal",
-      value: weeklyStats?.avgCalories || 0,
+      value: weeklyStats.avgCalories,
       unit: "calories",
       icon: TrendingUp,
       color: "text-blue-500",
