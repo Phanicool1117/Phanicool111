@@ -82,22 +82,192 @@ export type Database = {
       }
       profiles: {
         Row: {
+          activity_level: string | null
+          age: number | null
+          allergies: string[] | null
           created_at: string | null
+          current_weight_kg: number | null
+          daily_calorie_goal: number | null
+          daily_carbs_goal: number | null
+          daily_fat_goal: number | null
+          daily_protein_goal: number | null
+          dietary_preferences: string[] | null
           full_name: string | null
+          goal_type: string | null
+          goal_weight_kg: number | null
+          height_cm: number | null
           id: string
+          onboarding_completed: boolean | null
+          sex: string | null
           updated_at: string | null
         }
         Insert: {
+          activity_level?: string | null
+          age?: number | null
+          allergies?: string[] | null
           created_at?: string | null
+          current_weight_kg?: number | null
+          daily_calorie_goal?: number | null
+          daily_carbs_goal?: number | null
+          daily_fat_goal?: number | null
+          daily_protein_goal?: number | null
+          dietary_preferences?: string[] | null
           full_name?: string | null
+          goal_type?: string | null
+          goal_weight_kg?: number | null
+          height_cm?: number | null
           id: string
+          onboarding_completed?: boolean | null
+          sex?: string | null
           updated_at?: string | null
         }
         Update: {
+          activity_level?: string | null
+          age?: number | null
+          allergies?: string[] | null
           created_at?: string | null
+          current_weight_kg?: number | null
+          daily_calorie_goal?: number | null
+          daily_carbs_goal?: number | null
+          daily_fat_goal?: number | null
+          daily_protein_goal?: number | null
+          dietary_preferences?: string[] | null
           full_name?: string | null
+          goal_type?: string | null
+          goal_weight_kg?: number | null
+          height_cm?: number | null
           id?: string
+          onboarding_completed?: boolean | null
+          sex?: string | null
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      recipe_ingredients: {
+        Row: {
+          calories: number | null
+          carbs: number | null
+          created_at: string
+          fat: number | null
+          id: string
+          ingredient_name: string
+          protein: number | null
+          quantity: number
+          recipe_id: string
+          unit: string
+        }
+        Insert: {
+          calories?: number | null
+          carbs?: number | null
+          created_at?: string
+          fat?: number | null
+          id?: string
+          ingredient_name: string
+          protein?: number | null
+          quantity: number
+          recipe_id: string
+          unit: string
+        }
+        Update: {
+          calories?: number | null
+          carbs?: number | null
+          created_at?: string
+          fat?: number | null
+          id?: string
+          ingredient_name?: string
+          protein?: number | null
+          quantity?: number
+          recipe_id?: string
+          unit?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recipe_ingredients_recipe_id_fkey"
+            columns: ["recipe_id"]
+            isOneToOne: false
+            referencedRelation: "recipes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      recipes: {
+        Row: {
+          cook_time_minutes: number | null
+          created_at: string
+          description: string | null
+          id: string
+          instructions: string | null
+          is_public: boolean | null
+          name: string
+          prep_time_minutes: number | null
+          servings: number
+          total_calories: number | null
+          total_carbs: number | null
+          total_fat: number | null
+          total_protein: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cook_time_minutes?: number | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          instructions?: string | null
+          is_public?: boolean | null
+          name: string
+          prep_time_minutes?: number | null
+          servings?: number
+          total_calories?: number | null
+          total_carbs?: number | null
+          total_fat?: number | null
+          total_protein?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cook_time_minutes?: number | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          instructions?: string | null
+          is_public?: boolean | null
+          name?: string
+          prep_time_minutes?: number | null
+          servings?: number
+          total_calories?: number | null
+          total_carbs?: number | null
+          total_fat?: number | null
+          total_protein?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      weight_logs: {
+        Row: {
+          created_at: string
+          id: string
+          log_date: string
+          notes: string | null
+          user_id: string
+          weight_kg: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          log_date?: string
+          notes?: string | null
+          user_id: string
+          weight_kg: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          log_date?: string
+          notes?: string | null
+          user_id?: string
+          weight_kg?: number
         }
         Relationships: []
       }

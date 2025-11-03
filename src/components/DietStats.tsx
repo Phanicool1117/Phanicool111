@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Apple, Flame, TrendingUp, Utensils } from "lucide-react";
-
-const STORAGE_KEY = 'diet_meals';
+import { supabase } from "@/integrations/supabase/client";
+import { subDays, format } from "date-fns";
 
 export const DietStats = () => {
   const [weeklyStats, setWeeklyStats] = useState({
@@ -17,36 +17,32 @@ export const DietStats = () => {
   useEffect(() => {
     fetchWeeklyStats();
     
-    const handleStorage = () => fetchWeeklyStats();
-    window.addEventListener('storage', handleStorage);
-    window.addEventListener('meals-updated', handleStorage);
+    const handleUpdate = () => fetchWeeklyStats();
+    window.addEventListener('meals-updated', handleUpdate);
     
     return () => {
-      window.removeEventListener('storage', handleStorage);
-      window.removeEventListener('meals-updated', handleStorage);
+      window.removeEventListener('meals-updated', handleUpdate);
     };
   }, []);
 
-  const fetchWeeklyStats = () => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (!stored) return;
-      
-      const meals = JSON.parse(stored);
-      const today = new Date();
-      const sevenDaysAgo = new Date(today);
-      sevenDaysAgo.setDate(today.getDate() - 7);
+  const fetchWeeklyStats = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
 
-      const weeklyMeals = meals.filter((meal: any) => {
-        const mealDate = new Date(meal.meal_date);
-        return mealDate >= sevenDaysAgo && mealDate <= today;
-      });
+    const sevenDaysAgo = format(subDays(new Date(), 7), 'yyyy-MM-dd');
 
-      const totalCalories = weeklyMeals.reduce((sum: number, meal: any) => sum + (meal.calories || 0), 0);
-      const totalProtein = weeklyMeals.reduce((sum: number, meal: any) => sum + (Number(meal.protein) || 0), 0);
-      const totalCarbs = weeklyMeals.reduce((sum: number, meal: any) => sum + (Number(meal.carbs) || 0), 0);
-      const totalFat = weeklyMeals.reduce((sum: number, meal: any) => sum + (Number(meal.fat) || 0), 0);
-      const totalMeals = weeklyMeals.length;
+    const { data: meals } = await supabase
+      .from("meals")
+      .select("*")
+      .eq("user_id", user.id)
+      .gte("meal_date", sevenDaysAgo);
+
+    if (meals) {
+      const totalCalories = meals.reduce((sum, meal) => sum + (meal.calories || 0), 0);
+      const totalProtein = meals.reduce((sum, meal) => sum + (Number(meal.protein) || 0), 0);
+      const totalCarbs = meals.reduce((sum, meal) => sum + (Number(meal.carbs) || 0), 0);
+      const totalFat = meals.reduce((sum, meal) => sum + (Number(meal.fats) || 0), 0);
+      const totalMeals = meals.length;
 
       setWeeklyStats({
         calories: totalCalories,
@@ -56,8 +52,6 @@ export const DietStats = () => {
         meals: totalMeals,
         avgCalories: totalMeals > 0 ? Math.round(totalCalories / totalMeals) : 0,
       });
-    } catch (error) {
-      console.error('Error fetching stats:', error);
     }
   };
 

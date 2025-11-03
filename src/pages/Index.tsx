@@ -1,43 +1,49 @@
+import { useState } from "react";
 import { ChatInterface } from "@/components/ChatInterface";
 import { DietStats } from "@/components/DietStats";
 import { MealHistory } from "@/components/MealHistory";
 import { FoodSearchDialog } from "@/components/FoodSearchDialog";
+import { ProgressDashboard } from "@/components/ProgressDashboard";
+import { RecipeBuilder } from "@/components/RecipeBuilder";
 import { Button } from "@/components/ui/button";
-import { Menu, Plus } from "lucide-react";
+import { Menu, Plus, LogOut, TrendingUp, ChefHat } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { useState } from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const Index = () => {
   const [foodSearchOpen, setFoodSearchOpen] = useState(false);
 
-  const handleAddFood = (food: any) => {
+  const handleAddFood = async (food: any) => {
     try {
-      const stored = localStorage.getItem('diet_meals');
-      const meals = stored ? JSON.parse(stored) : [];
-      
-      const newMeal = {
-        id: crypto.randomUUID(),
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { error } = await supabase.from("meals").insert({
+        user_id: user.id,
         meal_name: food.name,
         meal_type: "snack",
         calories: food.calories,
         protein: food.protein,
         carbs: food.carbs,
-        fat: food.fat,
-        serving_info: `${food.servings} × ${food.serving_size} ${food.serving_unit}`,
-        meal_date: new Date().toISOString().split('T')[0],
-        created_at: new Date().toISOString(),
-      };
-      
-      meals.push(newMeal);
-      localStorage.setItem('diet_meals', JSON.stringify(meals));
-      
+        fats: food.fat,
+        notes: `${food.servings} × ${food.serving_size} ${food.serving_unit}`,
+      });
+
+      if (error) throw error;
+
       window.dispatchEvent(new Event('meals-updated'));
       toast.success('Food logged successfully! 🎉');
     } catch (error) {
       console.error('Error saving food:', error);
       toast.error('Failed to save food data');
     }
+  };
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    toast.success("Signed out successfully");
   };
 
   return (
@@ -55,6 +61,10 @@ const Index = () => {
               <Plus className="h-4 w-4 mr-2" />
               Add Food
             </Button>
+            <Button onClick={handleSignOut} variant="outline" size="sm" className="hidden md:flex">
+              <LogOut className="h-4 w-4 mr-2" />
+              Sign Out
+            </Button>
             <Sheet>
               <SheetTrigger asChild>
                 <Button variant="outline" size="icon" className="md:hidden">
@@ -63,12 +73,16 @@ const Index = () => {
               </SheetTrigger>
               <SheetContent>
                 <SheetHeader>
-                  <SheetTitle>Your Stats</SheetTitle>
+                  <SheetTitle>Menu</SheetTitle>
                 </SheetHeader>
                 <div className="mt-6 space-y-4">
                   <Button onClick={() => setFoodSearchOpen(true)} className="w-full">
                     <Plus className="h-4 w-4 mr-2" />
                     Add Food
+                  </Button>
+                  <Button onClick={handleSignOut} variant="outline" className="w-full">
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Sign Out
                   </Button>
                   <DietStats />
                   <MealHistory />
@@ -85,15 +99,48 @@ const Index = () => {
         onAddFood={handleAddFood}
       />
 
-      <div className="container mx-auto p-4 grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100vh-5rem)]">
-        <div className="lg:col-span-2 bg-card rounded-lg shadow-soft border overflow-hidden flex flex-col">
-          <ChatInterface />
-        </div>
+      <div className="container mx-auto p-4">
+        <Tabs defaultValue="chat" className="w-full">
+          <TabsList className="grid w-full grid-cols-4 mb-6">
+            <TabsTrigger value="chat">Chat</TabsTrigger>
+            <TabsTrigger value="progress">
+              <TrendingUp className="h-4 w-4 mr-2" />
+              Progress
+            </TabsTrigger>
+            <TabsTrigger value="recipes">
+              <ChefHat className="h-4 w-4 mr-2" />
+              Recipes
+            </TabsTrigger>
+            <TabsTrigger value="meals">Meals</TabsTrigger>
+          </TabsList>
 
-        <div className="hidden lg:block space-y-6 overflow-y-auto">
-          <DietStats />
-          <MealHistory />
-        </div>
+          <TabsContent value="chat" className="space-y-4">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100vh-12rem)]">
+              <div className="lg:col-span-2 bg-card rounded-lg shadow-soft border overflow-hidden flex flex-col">
+                <ChatInterface />
+              </div>
+              <div className="hidden lg:block space-y-6 overflow-y-auto">
+                <DietStats />
+                <MealHistory />
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="progress">
+            <ProgressDashboard />
+          </TabsContent>
+
+          <TabsContent value="recipes">
+            <RecipeBuilder />
+          </TabsContent>
+
+          <TabsContent value="meals">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <DietStats />
+              <MealHistory />
+            </div>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

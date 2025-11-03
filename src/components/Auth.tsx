@@ -7,6 +7,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
+import { z } from "zod";
+
+const emailSchema = z.string().email("Invalid email address");
+const passwordSchema = z.string().min(6, "Password must be at least 6 characters");
 
 export const Auth = () => {
   const [loading, setLoading] = useState(false);
@@ -14,15 +18,32 @@ export const Auth = () => {
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
 
+  const validateInputs = (): boolean => {
+    try {
+      emailSchema.parse(email);
+      passwordSchema.parse(password);
+      return true;
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        toast.error(error.errors[0].message);
+      }
+      return false;
+    }
+  };
+
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!validateInputs()) return;
+    
     setLoading(true);
 
     try {
+      const redirectUrl = `${window.location.origin}/`;
       const { error } = await supabase.auth.signUp({
         email,
         password,
         options: {
+          emailRedirectTo: redirectUrl,
           data: {
             full_name: fullName,
           },
@@ -35,8 +56,12 @@ export const Auth = () => {
       setEmail("");
       setPassword("");
       setFullName("");
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Error signing up");
+    } catch (error: any) {
+      if (error.message?.includes("already registered")) {
+        toast.error("This email is already registered. Please sign in instead.");
+      } else {
+        toast.error(error.message || "Failed to create account");
+      }
     } finally {
       setLoading(false);
     }
@@ -44,6 +69,8 @@ export const Auth = () => {
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!validateInputs()) return;
+    
     setLoading(true);
 
     try {
@@ -55,8 +82,12 @@ export const Auth = () => {
       if (error) throw error;
 
       toast.success("Welcome back!");
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Error signing in");
+    } catch (error: any) {
+      if (error.message?.includes("Invalid login credentials")) {
+        toast.error("Invalid email or password");
+      } else {
+        toast.error(error.message || "Failed to sign in");
+      }
     } finally {
       setLoading(false);
     }

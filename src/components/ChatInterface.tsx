@@ -4,8 +4,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Send, Loader2 } from "lucide-react";
 import { ChatMessage } from "./ChatMessage";
 import { toast } from "sonner";
-
-const STORAGE_KEY = 'diet_chat_messages';
+import { supabase } from "@/integrations/supabase/client";
 
 type Message = {
   role: "user" | "assistant";
@@ -23,43 +22,45 @@ export const ChatInterface = () => {
     loadMessages();
   }, []);
 
-  const loadMessages = () => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        setMessages(JSON.parse(stored));
-      }
-    } catch (error) {
-      console.error('Error loading messages:', error);
+  const loadMessages = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { data } = await supabase
+      .from("chat_messages")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: true });
+
+    if (data) {
+      setMessages(data.map(msg => ({ role: msg.role as "user" | "assistant", content: msg.content })));
     }
   };
 
-  const saveMessages = (msgs: Message[]) => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(msgs));
-    } catch (error) {
-      console.error('Error saving messages:', error);
-    }
+  const saveMessage = async (role: "user" | "assistant", content: string) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    await supabase.from("chat_messages").insert({
+      user_id: user.id,
+      role,
+      content,
+    });
   };
 
-  const saveMeal = (mealData: any) => {
+  const saveMeal = async (mealData: any) => {
     try {
-      const stored = localStorage.getItem('diet_meals');
-      const meals = stored ? JSON.parse(stored) : [];
-      
-      const newMeal = {
-        id: crypto.randomUUID(),
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { error } = await supabase.from("meals").insert({
+        user_id: user.id,
         ...mealData,
-        meal_date: new Date().toISOString().split('T')[0],
-        created_at: new Date().toISOString(),
-      };
-      
-      meals.push(newMeal);
-      localStorage.setItem('diet_meals', JSON.stringify(meals));
-      
-      // Trigger event for other components to update
+      });
+
+      if (error) throw error;
+
       window.dispatchEvent(new Event('meals-updated'));
-      
       toast.success('Meal logged successfully! 🎉');
     } catch (error) {
       console.error('Error saving meal:', error);
@@ -82,7 +83,7 @@ export const ChatInterface = () => {
     const userMessage = input.trim();
     const newMessages = [...messages, { role: "user" as const, content: userMessage }];
     setMessages(newMessages);
-    saveMessages(newMessages);
+    await saveMessage("user", userMessage);
     setInput("");
     setIsStreaming(true);
     setStreamingContent("");
@@ -147,14 +148,14 @@ export const ChatInterface = () => {
       if (accumulatedContent) {
         const finalMessages = [...newMessages, { role: "assistant" as const, content: accumulatedContent }];
         setMessages(finalMessages);
-        saveMessages(finalMessages);
+        await saveMessage("assistant", accumulatedContent);
         
         // Extract and save meal data from JSON code blocks
         const jsonMatch = accumulatedContent.match(/```json\s*\n([\s\S]*?)\n```/);
         if (jsonMatch) {
           try {
             const mealData = JSON.parse(jsonMatch[1]);
-            saveMeal(mealData);
+            await saveMeal(mealData);
           } catch (error) {
             console.error('Error parsing meal data:', error);
           }

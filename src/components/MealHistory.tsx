@@ -2,8 +2,7 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
-
-const STORAGE_KEY = 'diet_meals';
+import { supabase } from "@/integrations/supabase/client";
 
 type Meal = {
   id: string;
@@ -13,8 +12,7 @@ type Meal = {
   calories?: number;
   protein?: number;
   carbs?: number;
-  fat?: number;
-  serving_info?: string;
+  fats?: number;
   notes?: string;
   created_at: string;
 };
@@ -25,29 +23,26 @@ export const MealHistory = () => {
   useEffect(() => {
     fetchRecentMeals();
     
-    const handleStorage = () => fetchRecentMeals();
-    window.addEventListener('storage', handleStorage);
-    window.addEventListener('meals-updated', handleStorage);
+    const handleUpdate = () => fetchRecentMeals();
+    window.addEventListener('meals-updated', handleUpdate);
     
     return () => {
-      window.removeEventListener('storage', handleStorage);
-      window.removeEventListener('meals-updated', handleStorage);
+      window.removeEventListener('meals-updated', handleUpdate);
     };
   }, []);
 
-  const fetchRecentMeals = () => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (!stored) return;
-      
-      const allMeals = JSON.parse(stored);
-      const sorted = allMeals.sort((a: Meal, b: Meal) => 
-        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-      );
-      setMeals(sorted.slice(0, 10));
-    } catch (error) {
-      console.error('Error fetching meals:', error);
-    }
+  const fetchRecentMeals = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { data } = await supabase
+      .from("meals")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(10);
+
+    if (data) setMeals(data);
   };
 
   const getMealTypeColor = (type: string) => {
@@ -95,9 +90,6 @@ export const MealHistory = () => {
                   <p className="text-sm text-muted-foreground">
                     {format(new Date(meal.meal_date), "MMM d, yyyy")}
                   </p>
-                  {meal.serving_info && (
-                    <p className="text-xs text-muted-foreground">{meal.serving_info}</p>
-                  )}
                   {meal.notes && (
                     <p className="text-sm text-muted-foreground italic">{meal.notes}</p>
                   )}
@@ -107,9 +99,9 @@ export const MealHistory = () => {
                     <p className="text-sm font-medium">{meal.calories} cal</p>
                   )}
                   <div className="text-xs text-muted-foreground space-y-0.5">
-                    {meal.protein !== undefined && <p>P: {meal.protein}g</p>}
-                    {meal.carbs !== undefined && <p>C: {meal.carbs}g</p>}
-                    {meal.fat !== undefined && <p>F: {meal.fat}g</p>}
+                    {meal.protein !== undefined && meal.protein !== null && <p>P: {Number(meal.protein).toFixed(1)}g</p>}
+                    {meal.carbs !== undefined && meal.carbs !== null && <p>C: {Number(meal.carbs).toFixed(1)}g</p>}
+                    {meal.fats !== undefined && meal.fats !== null && <p>F: {Number(meal.fats).toFixed(1)}g</p>}
                   </div>
                 </div>
               </div>
