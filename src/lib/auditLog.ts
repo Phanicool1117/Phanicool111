@@ -22,6 +22,5 @@ export const logAuditEvent = async (
     });
   } catch (error) {
     // Silent fail - don't block operations if logging fails
-    console.warn("Audit logging failed:", error);
   }
 };
