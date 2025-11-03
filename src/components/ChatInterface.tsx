@@ -63,7 +63,6 @@ export const ChatInterface = () => {
       window.dispatchEvent(new Event('meals-updated'));
       toast.success('Meal logged successfully! 🎉');
     } catch (error) {
-      console.error('Error saving meal:', error);
       toast.error('Failed to save meal data');
     }
   };
@@ -157,12 +156,11 @@ export const ChatInterface = () => {
             const mealData = JSON.parse(jsonMatch[1]);
             await saveMeal(mealData);
           } catch (error) {
-            console.error('Error parsing meal data:', error);
+            // Silent fail for meal parsing
           }
         }
       }
     } catch (error) {
-      console.error("Chat error:", error);
       toast.error(error instanceof Error ? error.message : "Failed to send message");
     } finally {
       setIsStreaming(false);

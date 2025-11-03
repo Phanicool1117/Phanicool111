@@ -180,7 +180,6 @@ export const RecipeBuilder = () => {
       setDialogOpen(false);
       fetchRecipes();
     } catch (error) {
-      console.error("Error saving recipe:", error);
       toast.error("Failed to save recipe");
     }
   };

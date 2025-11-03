@@ -108,7 +108,6 @@ export const ProgressDashboard = () => {
       setDialogOpen(false);
       fetchData();
     } catch (error) {
-      console.error("Error adding weight:", error);
       toast.error("Failed to log weight");
     }
   };

@@ -63,7 +63,6 @@ export const FoodSearchDialog = ({ open, onOpenChange, onAddFood }: FoodSearchDi
         setSelectedFood(data.foods[0]);
       }
     } catch (error) {
-      console.error("Search error:", error);
       toast.error(error instanceof Error ? error.message : "Failed to search foods");
     } finally {
       setIsSearching(false);
