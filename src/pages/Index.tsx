@@ -5,12 +5,14 @@ import { MealHistory } from "@/components/MealHistory";
 import { FoodSearchDialog } from "@/components/FoodSearchDialog";
 import { ProgressDashboard } from "@/components/ProgressDashboard";
 import { RecipeBuilder } from "@/components/RecipeBuilder";
+import { Settings } from "@/components/Settings";
 import { Button } from "@/components/ui/button";
-import { Menu, Plus, LogOut, TrendingUp, ChefHat } from "lucide-react";
+import { Menu, Plus, LogOut, TrendingUp, ChefHat, Settings as SettingsIcon } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { logAuditEvent } from "@/lib/auditLog";
 
 const Index = () => {
   const [foodSearchOpen, setFoodSearchOpen] = useState(false);
@@ -20,7 +22,7 @@ const Index = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const { error } = await supabase.from("meals").insert({
+      const mealData = {
         user_id: user.id,
         meal_name: food.name,
         meal_type: "snack",
@@ -29,19 +31,22 @@ const Index = () => {
         carbs: food.carbs,
         fats: food.fat,
         notes: `${food.servings} × ${food.serving_size} ${food.serving_unit}`,
-      });
+      };
+
+      const { error } = await supabase.from("meals").insert(mealData);
 
       if (error) throw error;
 
+      await logAuditEvent('meal_logged', 'meals', undefined, undefined, mealData);
       window.dispatchEvent(new Event('meals-updated'));
       toast.success('Food logged successfully! 🎉');
     } catch (error) {
-      console.error('Error saving food:', error);
       toast.error('Failed to save food data');
     }
   };
 
   const handleSignOut = async () => {
+    await logAuditEvent('user_logout', 'auth', undefined);
     await supabase.auth.signOut();
     toast.success("Signed out successfully");
   };
@@ -101,17 +106,21 @@ const Index = () => {
 
       <div className="container mx-auto p-4">
         <Tabs defaultValue="chat" className="w-full">
-          <TabsList className="grid w-full grid-cols-4 mb-6">
+          <TabsList className="grid w-full grid-cols-5 mb-6">
             <TabsTrigger value="chat">Chat</TabsTrigger>
             <TabsTrigger value="progress">
-              <TrendingUp className="h-4 w-4 mr-2" />
+              <TrendingUp className="h-4 w-4 mr-2 hidden sm:inline" />
               Progress
             </TabsTrigger>
             <TabsTrigger value="recipes">
-              <ChefHat className="h-4 w-4 mr-2" />
+              <ChefHat className="h-4 w-4 mr-2 hidden sm:inline" />
               Recipes
             </TabsTrigger>
             <TabsTrigger value="meals">Meals</TabsTrigger>
+            <TabsTrigger value="settings">
+              <SettingsIcon className="h-4 w-4 mr-2 hidden sm:inline" />
+              Settings
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="chat" className="space-y-4">
@@ -139,6 +148,10 @@ const Index = () => {
               <DietStats />
               <MealHistory />
             </div>
+          </TabsContent>
+
+          <TabsContent value="settings">
+            <Settings />
           </TabsContent>
         </Tabs>
       </div>

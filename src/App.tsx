@@ -45,6 +45,37 @@ const App = () => {
     return () => subscription.unsubscribe();
   }, []);
 
+  // Session timeout - auto logout after 30 minutes of inactivity
+  useEffect(() => {
+    if (!user) return;
+
+    let timeoutId: NodeJS.Timeout;
+    const TIMEOUT_DURATION = 30 * 60 * 1000; // 30 minutes
+
+    const resetTimeout = () => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(async () => {
+        await supabase.auth.signOut();
+      }, TIMEOUT_DURATION);
+    };
+
+    // Reset timeout on user activity
+    const events = ['mousedown', 'keydown', 'scroll', 'touchstart'];
+    events.forEach(event => {
+      window.addEventListener(event, resetTimeout);
+    });
+
+    // Initialize timeout
+    resetTimeout();
+
+    return () => {
+      clearTimeout(timeoutId);
+      events.forEach(event => {
+        window.removeEventListener(event, resetTimeout);
+      });
+    };
+  }, [user]);
+
   const checkOnboardingStatus = async (userId: string) => {
     const { data } = await supabase
       .from("profiles")

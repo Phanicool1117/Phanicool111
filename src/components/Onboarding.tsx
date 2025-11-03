@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Checkbox } from "@/components/ui/checkbox";
 import { z } from "zod";
+import { logAuditEvent } from "@/lib/auditLog";
 
 const DIETARY_OPTIONS = ["vegetarian", "vegan", "keto", "paleo", "gluten_free", "dairy_free", "low_carb"];
 const ALLERGY_OPTIONS = ["peanuts", "tree_nuts", "milk", "eggs", "soy", "wheat", "fish", "shellfish"];
@@ -120,6 +121,7 @@ export const Onboarding = ({ onComplete }: { onComplete: () => void }) => {
 
       if (error) throw error;
 
+      await logAuditEvent('onboarding_completed', 'profiles', user.id, undefined, validationResult.data);
       toast.success("Profile completed! Your personalized plan is ready 🎉");
       onComplete();
     } catch (error) {
