@@ -9,9 +9,17 @@ import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Checkbox } from "@/components/ui/checkbox";
+import { z } from "zod";
 
 const DIETARY_OPTIONS = ["vegetarian", "vegan", "keto", "paleo", "gluten_free", "dairy_free", "low_carb"];
 const ALLERGY_OPTIONS = ["peanuts", "tree_nuts", "milk", "eggs", "soy", "wheat", "fish", "shellfish"];
+
+const onboardingSchema = z.object({
+  age: z.number().int().min(13, "Must be at least 13 years old").max(120, "Invalid age"),
+  height_cm: z.number().min(50, "Height must be at least 50 cm").max(300, "Height must be less than 300 cm"),
+  current_weight_kg: z.number().min(20, "Weight must be at least 20 kg").max(500, "Weight must be less than 500 kg"),
+  goal_weight_kg: z.number().min(20, "Goal weight must be at least 20 kg").max(500, "Goal weight must be less than 500 kg"),
+});
 
 export const Onboarding = ({ onComplete }: { onComplete: () => void }) => {
   const [step, setStep] = useState(1);
@@ -72,6 +80,19 @@ export const Onboarding = ({ onComplete }: { onComplete: () => void }) => {
 
   const handleComplete = async () => {
     try {
+      // Validate inputs
+      const validationResult = onboardingSchema.safeParse({
+        age: parseInt(formData.age),
+        height_cm: parseFloat(formData.height_cm),
+        current_weight_kg: parseFloat(formData.current_weight_kg),
+        goal_weight_kg: parseFloat(formData.goal_weight_kg),
+      });
+
+      if (!validationResult.success) {
+        toast.error(validationResult.error.errors[0].message);
+        return;
+      }
+
       const goals = calculateGoals();
       const { data: { user } } = await supabase.auth.getUser();
       
@@ -83,11 +104,11 @@ export const Onboarding = ({ onComplete }: { onComplete: () => void }) => {
       const { error } = await supabase
         .from("profiles")
         .update({
-          age: parseInt(formData.age),
+          age: validationResult.data.age,
           sex: formData.sex,
-          height_cm: parseFloat(formData.height_cm),
-          current_weight_kg: parseFloat(formData.current_weight_kg),
-          goal_weight_kg: parseFloat(formData.goal_weight_kg),
+          height_cm: validationResult.data.height_cm,
+          current_weight_kg: validationResult.data.current_weight_kg,
+          goal_weight_kg: validationResult.data.goal_weight_kg,
           activity_level: formData.activity_level,
           goal_type: formData.goal_type,
           dietary_preferences: formData.dietary_preferences,
@@ -102,7 +123,6 @@ export const Onboarding = ({ onComplete }: { onComplete: () => void }) => {
       toast.success("Profile completed! Your personalized plan is ready 🎉");
       onComplete();
     } catch (error) {
-      console.error("Onboarding error:", error);
       toast.error("Failed to save profile");
     }
   };
