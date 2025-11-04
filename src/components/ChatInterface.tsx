@@ -145,20 +145,24 @@ export const ChatInterface = () => {
       }
 
       if (accumulatedContent) {
-        const finalMessages = [...newMessages, { role: "assistant" as const, content: accumulatedContent }];
-        setMessages(finalMessages);
-        await saveMessage("assistant", accumulatedContent);
-        
-        // Extract and save meal data from JSON code blocks
+        // Extract and save meal data from JSON code blocks before displaying
         const jsonMatch = accumulatedContent.match(/```json\s*\n([\s\S]*?)\n```/);
+        let displayContent = accumulatedContent;
+        
         if (jsonMatch) {
           try {
             const mealData = JSON.parse(jsonMatch[1]);
             await saveMeal(mealData);
+            // Remove JSON code block from display
+            displayContent = accumulatedContent.replace(/```json\s*\n[\s\S]*?\n```/g, '').trim();
           } catch (error) {
             // Silent fail for meal parsing
           }
         }
+        
+        const finalMessages = [...newMessages, { role: "assistant" as const, content: displayContent }];
+        setMessages(finalMessages);
+        await saveMessage("assistant", displayContent);
       }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to send message");

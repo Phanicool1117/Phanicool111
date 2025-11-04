@@ -1,17 +1,35 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Download, Trash2, Shield } from "lucide-react";
+import { Download, Settings as SettingsIcon, FileJson, FileImage } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { logAuditEvent } from "@/lib/auditLog";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 export const Settings = () => {
   const [exportLoading, setExportLoading] = useState(false);
-  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [showRecipes, setShowRecipes] = useState(
+    localStorage.getItem('showRecipes') !== 'false'
+  );
+  const [showMealHistory, setShowMealHistory] = useState(
+    localStorage.getItem('showMealHistory') !== 'false'
+  );
 
-  const handleExportData = async () => {
+  const handleToggleRecipes = (checked: boolean) => {
+    setShowRecipes(checked);
+    localStorage.setItem('showRecipes', String(checked));
+    window.dispatchEvent(new Event('settings-updated'));
+  };
+
+  const handleToggleMealHistory = (checked: boolean) => {
+    setShowMealHistory(checked);
+    localStorage.setItem('showMealHistory', String(checked));
+    window.dispatchEvent(new Event('settings-updated'));
+  };
+
+  const handleExportData = async (format: 'json' | 'csv') => {
     setExportLoading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -37,19 +55,45 @@ export const Settings = () => {
         chat_messages: chatRes.data,
       };
 
-      // Create and download JSON file
-      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `diet-tracker-data-${new Date().toISOString().split('T')[0]}.json`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      if (format === 'json') {
+        const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `diet-tracker-data-${new Date().toISOString().split('T')[0]}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      } else if (format === 'csv') {
+        // Create CSV for meals
+        const mealsCSV = [
+          ['Date', 'Meal Name', 'Type', 'Calories', 'Protein', 'Carbs', 'Fat', 'Notes'],
+          ...(mealsRes.data || []).map(m => [
+            m.meal_date,
+            m.meal_name,
+            m.meal_type || '',
+            m.calories || '',
+            m.protein || '',
+            m.carbs || '',
+            m.fats || '',
+            m.notes || ''
+          ])
+        ].map(row => row.join(',')).join('\n');
+
+        const blob = new Blob([mealsCSV], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `diet-tracker-meals-${new Date().toISOString().split('T')[0]}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
 
       await logAuditEvent('data_export', 'all_tables', user.id);
-      toast.success("Your data has been exported successfully!");
+      toast.success(`Your data has been exported as ${format.toUpperCase()}!`);
     } catch (error) {
       toast.error("Failed to export data");
     } finally {
@@ -57,148 +101,76 @@ export const Settings = () => {
     }
   };
 
-  const handleDeleteAccount = async () => {
-    setDeleteLoading(true);
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      // Log the deletion attempt
-      await logAuditEvent('account_deletion_requested', 'profiles', user.id);
-
-      // First get recipe IDs to delete ingredients
-      const { data: recipes } = await supabase
-        .from('recipes')
-        .select('id')
-        .eq('user_id', user.id);
-      
-      const recipeIds = recipes?.map(r => r.id) || [];
-
-      // Delete all user data
-      await Promise.all([
-        supabase.from('chat_messages').delete().eq('user_id', user.id),
-        supabase.from('weight_logs').delete().eq('user_id', user.id),
-        recipeIds.length > 0 
-          ? supabase.from('recipe_ingredients').delete().in('recipe_id', recipeIds)
-          : Promise.resolve(),
-        supabase.from('recipes').delete().eq('user_id', user.id),
-        supabase.from('meals').delete().eq('user_id', user.id),
-        supabase.from('audit_logs').delete().eq('user_id', user.id),
-        supabase.from('profiles').delete().eq('id', user.id),
-      ]);
-
-      // Sign out the user
-      await supabase.auth.signOut();
-      toast.success("Your account has been deleted");
-    } catch (error) {
-      toast.error("Failed to delete account");
-    } finally {
-      setDeleteLoading(false);
-    }
-  };
-
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
       <div className="flex items-center gap-2">
-        <Shield className="h-6 w-6 text-primary" />
-        <h2 className="text-3xl font-bold">Security & Privacy</h2>
+        <SettingsIcon className="h-6 w-6 text-primary" />
+        <h2 className="text-3xl font-bold">Settings</h2>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>App Preferences</CardTitle>
+          <CardDescription>
+            Customize which sections you want to see in the app
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label htmlFor="recipes-toggle">Show Recipes Section</Label>
+              <p className="text-sm text-muted-foreground">
+                Enable or disable the recipes builder section
+              </p>
+            </div>
+            <Switch
+              id="recipes-toggle"
+              checked={showRecipes}
+              onCheckedChange={handleToggleRecipes}
+            />
+          </div>
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label htmlFor="meals-toggle">Show Meal History</Label>
+              <p className="text-sm text-muted-foreground">
+                Enable or disable the meal history display
+              </p>
+            </div>
+            <Switch
+              id="meals-toggle"
+              checked={showMealHistory}
+              onCheckedChange={handleToggleMealHistory}
+            />
+          </div>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
           <CardTitle>Data Export</CardTitle>
           <CardDescription>
-            Download all your personal data in JSON format. This includes your profile, meals, recipes, weight logs, and chat history.
+            Download your data in different formats
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-3">
           <Button 
-            onClick={handleExportData} 
+            onClick={() => handleExportData('json')} 
             disabled={exportLoading}
             className="w-full sm:w-auto"
+            variant="outline"
+          >
+            <FileJson className="h-4 w-4 mr-2" />
+            {exportLoading ? "Exporting..." : "Export as JSON"}
+          </Button>
+          <Button 
+            onClick={() => handleExportData('csv')} 
+            disabled={exportLoading}
+            className="w-full sm:w-auto"
+            variant="outline"
           >
             <Download className="h-4 w-4 mr-2" />
-            {exportLoading ? "Exporting..." : "Export My Data"}
+            {exportLoading ? "Exporting..." : "Export Meals as CSV"}
           </Button>
-        </CardContent>
-      </Card>
-
-      <Card className="border-destructive/50">
-        <CardHeader>
-          <CardTitle className="text-destructive">Delete Account</CardTitle>
-          <CardDescription>
-            Permanently delete your account and all associated data. This action cannot be undone.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button variant="destructive" className="w-full sm:w-auto">
-                <Trash2 className="h-4 w-4 mr-2" />
-                Delete My Account
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  This action cannot be undone. This will permanently delete your account and remove all your data from our servers including:
-                  <ul className="list-disc list-inside mt-2 space-y-1">
-                    <li>Your profile and personal information</li>
-                    <li>All meal logs and nutrition data</li>
-                    <li>All recipes you've created</li>
-                    <li>Weight tracking history</li>
-                    <li>Chat history with the AI assistant</li>
-                  </ul>
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={handleDeleteAccount}
-                  disabled={deleteLoading}
-                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                >
-                  {deleteLoading ? "Deleting..." : "Yes, delete my account"}
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Security Information</CardTitle>
-          <CardDescription>
-            Learn about how we protect your data
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-3 text-sm">
-          <div className="flex items-start gap-2">
-            <div className="text-primary mt-0.5">🔒</div>
-            <div>
-              <strong>Password Security:</strong> Your password must be at least 8 characters and include uppercase, lowercase, numbers, and special characters.
-            </div>
-          </div>
-          <div className="flex items-start gap-2">
-            <div className="text-primary mt-0.5">⏱️</div>
-            <div>
-              <strong>Auto Logout:</strong> You'll be automatically logged out after 30 minutes of inactivity for security.
-            </div>
-          </div>
-          <div className="flex items-start gap-2">
-            <div className="text-primary mt-0.5">📊</div>
-            <div>
-              <strong>Audit Logging:</strong> We track important actions on your account for security and debugging purposes.
-            </div>
-          </div>
-          <div className="flex items-start gap-2">
-            <div className="text-primary mt-0.5">🔐</div>
-            <div>
-              <strong>Data Privacy:</strong> Your data is encrypted and only accessible by you. We use Row-Level Security to ensure data isolation.
-            </div>
-          </div>
         </CardContent>
       </Card>
     </div>

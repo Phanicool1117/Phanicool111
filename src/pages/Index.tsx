@@ -7,6 +7,7 @@ import { FoodSearchDialog } from "@/components/FoodSearchDialog";
 import { ProgressDashboard } from "@/components/ProgressDashboard";
 import { RecipeBuilder } from "@/components/RecipeBuilder";
 import { Settings } from "@/components/Settings";
+import { Exercise } from "@/components/Exercise";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
@@ -19,12 +20,28 @@ const Index = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [foodSearchOpen, setFoodSearchOpen] = useState(false);
   const currentTab = searchParams.get('tab') || 'chat';
+  const [showRecipes, setShowRecipes] = useState(
+    localStorage.getItem('showRecipes') !== 'false'
+  );
+  const [showMealHistory, setShowMealHistory] = useState(
+    localStorage.getItem('showMealHistory') !== 'false'
+  );
 
   useEffect(() => {
     if (!searchParams.get('tab')) {
       setSearchParams({ tab: 'chat' });
     }
   }, [searchParams, setSearchParams]);
+
+  useEffect(() => {
+    const handleSettingsUpdate = () => {
+      setShowRecipes(localStorage.getItem('showRecipes') !== 'false');
+      setShowMealHistory(localStorage.getItem('showMealHistory') !== 'false');
+    };
+    
+    window.addEventListener('settings-updated', handleSettingsUpdate);
+    return () => window.removeEventListener('settings-updated', handleSettingsUpdate);
+  }, []);
 
   const handleAddFood = async (food: any) => {
     try {
@@ -84,23 +101,32 @@ const Index = () => {
                 <div className="lg:col-span-2 bg-card rounded-lg shadow-soft border overflow-hidden flex flex-col">
                   <ChatInterface />
                 </div>
-                <div className="hidden lg:block space-y-6 overflow-y-auto">
-                  <DietStats />
-                  <MealHistory />
-                </div>
+                {showMealHistory && (
+                  <div className="hidden lg:block space-y-6 overflow-y-auto">
+                    <DietStats />
+                    <MealHistory />
+                  </div>
+                )}
               </div>
             )}
 
             {currentTab === 'progress' && <ProgressDashboard />}
 
-            {currentTab === 'recipes' && <RecipeBuilder />}
+            {showRecipes && currentTab === 'recipes' && <RecipeBuilder />}
+            {!showRecipes && currentTab === 'recipes' && (
+              <div className="flex items-center justify-center h-[calc(100vh-10rem)]">
+                <p className="text-muted-foreground">Recipes section is disabled. Enable it in Settings.</p>
+              </div>
+            )}
 
             {currentTab === 'meals' && (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <DietStats />
-                <MealHistory />
+                {showMealHistory && <MealHistory />}
               </div>
             )}
+
+            {currentTab === 'exercise' && <Exercise />}
 
             {currentTab === 'settings' && <Settings />}
           </div>

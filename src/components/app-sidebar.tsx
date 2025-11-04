@@ -1,4 +1,4 @@
-import { MessageSquare, TrendingUp, ChefHat, Utensils, Settings as SettingsIcon, LogOut } from "lucide-react";
+import { MessageSquare, TrendingUp, ChefHat, Utensils, Settings as SettingsIcon, LogOut, Dumbbell } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   Sidebar,
@@ -21,6 +21,7 @@ const navigationItems = [
   { title: "Progress", icon: TrendingUp, tab: "progress" },
   { title: "Recipes", icon: ChefHat, tab: "recipes" },
   { title: "Meals", icon: Utensils, tab: "meals" },
+  { title: "Exercise", icon: Dumbbell, tab: "exercise" },
   { title: "Settings", icon: SettingsIcon, tab: "settings" },
 ];
 

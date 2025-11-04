@@ -106,7 +106,7 @@ const App = () => {
               path="/"
               element={
                 !user ? (
-                  <Auth />
+                  <Onboarding onComplete={() => setOnboardingComplete(true)} />
                 ) : !onboardingComplete ? (
                   <Onboarding onComplete={() => setOnboardingComplete(true)} />
                 ) : (
