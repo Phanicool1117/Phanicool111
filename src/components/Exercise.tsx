@@ -269,8 +269,51 @@ const getCategoryIcon = (category: string) => {
 };
 
 const ExerciseAnimation = ({ animation, name }: { animation: string; name: string }) => {
-  const [useLottie] = useState(false); // Toggle to true when Lottie files are available
+  // Map animation names to asset filenames
+  const assetMap: Record<string, string> = {
+    'jumping-jack': 'jumping-jacks',
+    'squat': 'squat',
+    'push-up': 'push-up',
+    'plank': 'plank',
+    'lunge': 'lunges',
+    'mountain-climber': 'mountain-climbers',
+    'burpee': 'burpees',
+    'high-knee': 'high-knees',
+    'bicycle-crunch': 'bicycle-crunches',
+    'wall-sit': 'wall-sit',
+    'tricep-dip': 'tricep-dips',
+    'russian-twist': 'russian-twists'
+  };
 
+  const assetName = assetMap[animation] || animation;
+  const hasAsset = ['jumping-jacks', 'squat', 'dumbbell-curl', 'treadmill', 'hula-hoop'].includes(assetName);
+
+  if (hasAsset) {
+    return (
+      <figure 
+        className="fit-illust fit-illust--md" 
+        role="img" 
+        aria-label={`${name} exercise animation`}
+      >
+        <img 
+          className="anim-src" 
+          src={`/assets/exercises/${assetName}.webp`} 
+          alt={`${name} animation`} 
+          width="320" 
+          height="320"
+        />
+        <img 
+          className="still-src" 
+          src={`/assets/exercises/${assetName}-still.png`} 
+          alt={`${name} still`} 
+          width="320" 
+          height="320"
+        />
+      </figure>
+    );
+  }
+
+  // SVG fallback for exercises without assets
   const getIllustration = () => {
     const baseClasses = "absolute inset-0 flex items-center justify-center";
     
@@ -283,17 +326,6 @@ const ExerciseAnimation = ({ animation, name }: { animation: string; name: strin
               <path d="M60 120 L140 120 M100 80 L100 160" className="stroke" strokeWidth="4" strokeLinecap="round" />
               <circle cx="100" cy="80" r="15" className="top" />
               <rect x="85" y="100" width="30" height="50" rx="5" className="bottom" />
-            </svg>
-          </div>
-        );
-      case "squat":
-        return (
-          <div className={baseClasses}>
-            <svg viewBox="0 0 200 200" className="w-full h-full">
-              <circle cx="100" cy="100" r="90" className="blob" />
-              <circle cx="100" cy="60" r="18" className="top" />
-              <path d="M100 78 L100 120 M100 120 L75 160 M100 120 L125 160" className="stroke" strokeWidth="4" strokeLinecap="round" />
-              <path d="M100 95 L70 110 M100 95 L130 110" className="bottom" strokeWidth="6" strokeLinecap="round" />
             </svg>
           </div>
         );
@@ -339,16 +371,6 @@ const ExerciseAnimation = ({ animation, name }: { animation: string; name: strin
               <circle cx="100" cy="70" r="15" className="top" />
               <path d="M100 85 L100 125 M100 125 L75 155 M100 125 L125 155" className="stroke" strokeWidth="4" strokeLinecap="round" />
               <path d="M100 100 L70 115 M100 100 L130 115" className="bottom" strokeWidth="6" strokeLinecap="round" />
-            </svg>
-          </div>
-        );
-      case "jumping-jack":
-        return (
-          <div className={baseClasses}>
-            <svg viewBox="0 0 200 200" className="w-full h-full">
-              <circle cx="100" cy="100" r="90" className="blob" />
-              <circle cx="100" cy="65" r="14" className="top" />
-              <path d="M100 79 L100 130 M100 95 L65 85 M100 95 L135 85 M100 130 L75 165 M100 130 L125 165" className="stroke" strokeWidth="4" strokeLinecap="round" />
             </svg>
           </div>
         );
@@ -412,27 +434,6 @@ const ExerciseAnimation = ({ animation, name }: { animation: string; name: strin
         return null;
     }
   };
-
-  if (useLottie) {
-    return (
-      <figure 
-        className="fit-illust fit-illust--md fit-illust--framed w-full" 
-        role="img" 
-        aria-label={`${name} exercise animation`}
-      >
-        <div className="relative w-full aspect-square">
-          <lottie-player
-            src={`/assets/exercises/${animation}.json`}
-            background="transparent"
-            speed="1"
-            style={{ width: '100%', height: '100%' }}
-            loop
-            autoplay
-          />
-        </div>
-      </figure>
-    );
-  }
 
   return (
     <figure 
