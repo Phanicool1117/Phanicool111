@@ -254,7 +254,7 @@ const getCategoryIcon = (category: string) => {
   }
 };
 
-const ExerciseAnimation = ({ animation }: { animation: string }) => {
+const ExerciseAnimation = ({ animation, name }: { animation: string; name: string }) => {
   const getIllustration = () => {
     const baseClasses = "absolute inset-0 flex items-center justify-center";
     
@@ -262,133 +262,133 @@ const ExerciseAnimation = ({ animation }: { animation: string }) => {
       case "push-up":
         return (
           <div className={baseClasses}>
-            <svg viewBox="0 0 200 200" className="w-32 h-32">
-              <circle cx="100" cy="100" r="90" fill="hsl(var(--primary))" opacity="0.1" />
-              <path d="M60 120 L140 120 M100 80 L100 160" stroke="hsl(var(--primary))" strokeWidth="4" strokeLinecap="round" className="animate-pulse" />
-              <circle cx="100" cy="80" r="15" fill="hsl(var(--primary))" />
-              <rect x="85" y="100" width="30" height="50" rx="5" fill="hsl(var(--secondary))" />
+            <svg viewBox="0 0 200 200" className="w-full h-full">
+              <circle cx="100" cy="100" r="90" className="blob" />
+              <path d="M60 120 L140 120 M100 80 L100 160" className="stroke" strokeWidth="4" strokeLinecap="round" />
+              <circle cx="100" cy="80" r="15" className="top" />
+              <rect x="85" y="100" width="30" height="50" rx="5" className="bottom" />
             </svg>
           </div>
         );
       case "squat":
         return (
           <div className={baseClasses}>
-            <svg viewBox="0 0 200 200" className="w-32 h-32">
-              <circle cx="100" cy="100" r="90" fill="hsl(var(--secondary))" opacity="0.1" />
-              <circle cx="100" cy="60" r="18" fill="hsl(var(--primary))" />
-              <path d="M100 78 L100 120 M100 120 L75 160 M100 120 L125 160" stroke="hsl(var(--primary))" strokeWidth="4" strokeLinecap="round" />
-              <path d="M100 95 L70 110 M100 95 L130 110" stroke="hsl(var(--secondary))" strokeWidth="4" strokeLinecap="round" className="animate-pulse" />
+            <svg viewBox="0 0 200 200" className="w-full h-full">
+              <circle cx="100" cy="100" r="90" className="blob" />
+              <circle cx="100" cy="60" r="18" className="top" />
+              <path d="M100 78 L100 120 M100 120 L75 160 M100 120 L125 160" className="stroke" strokeWidth="4" strokeLinecap="round" />
+              <path d="M100 95 L70 110 M100 95 L130 110" className="bottom" strokeWidth="6" strokeLinecap="round" />
             </svg>
           </div>
         );
       case "plank":
         return (
           <div className={baseClasses}>
-            <svg viewBox="0 0 200 200" className="w-32 h-32">
-              <circle cx="100" cy="100" r="90" fill="hsl(var(--accent))" opacity="0.1" />
-              <line x1="50" y1="110" x2="150" y2="110" stroke="hsl(var(--primary))" strokeWidth="6" strokeLinecap="round" />
-              <circle cx="60" cy="110" r="8" fill="hsl(var(--primary))" />
-              <circle cx="140" cy="110" r="8" fill="hsl(var(--primary))" />
-              <rect x="75" y="80" width="50" height="30" rx="8" fill="hsl(var(--secondary))" className="animate-pulse" />
+            <svg viewBox="0 0 200 200" className="w-full h-full">
+              <circle cx="100" cy="100" r="90" className="blob" />
+              <line x1="50" y1="110" x2="150" y2="110" className="stroke" strokeWidth="6" strokeLinecap="round" />
+              <circle cx="60" cy="110" r="8" className="top" />
+              <circle cx="140" cy="110" r="8" className="top" />
+              <rect x="75" y="80" width="50" height="30" rx="8" className="bottom" />
             </svg>
           </div>
         );
       case "lunge":
         return (
           <div className={baseClasses}>
-            <svg viewBox="0 0 200 200" className="w-32 h-32">
-              <circle cx="100" cy="100" r="90" fill="hsl(var(--primary))" opacity="0.1" />
-              <circle cx="100" cy="50" r="16" fill="hsl(var(--primary))" />
-              <path d="M100 66 L100 110 M100 110 L70 160 M100 110 L130 140" stroke="hsl(var(--primary))" strokeWidth="4" strokeLinecap="round" />
-              <circle cx="70" cy="160" r="6" fill="hsl(var(--secondary))" className="animate-bounce" />
+            <svg viewBox="0 0 200 200" className="w-full h-full">
+              <circle cx="100" cy="100" r="90" className="blob" />
+              <circle cx="100" cy="50" r="16" className="top" />
+              <path d="M100 66 L100 110 M100 110 L70 160 M100 110 L130 140" className="stroke" strokeWidth="4" strokeLinecap="round" />
+              <circle cx="70" cy="160" r="6" className="accent" />
             </svg>
           </div>
         );
       case "mountain-climber":
         return (
           <div className={baseClasses}>
-            <svg viewBox="0 0 200 200" className="w-32 h-32">
-              <circle cx="100" cy="100" r="90" fill="hsl(var(--secondary))" opacity="0.1" />
-              <path d="M50 100 L100 60 L150 100" stroke="hsl(var(--primary))" strokeWidth="4" strokeLinecap="round" fill="none" />
-              <circle cx="100" cy="60" r="12" fill="hsl(var(--primary))" className="animate-pulse" />
-              <path d="M85 120 L115 120" stroke="hsl(var(--secondary))" strokeWidth="3" strokeLinecap="round" />
+            <svg viewBox="0 0 200 200" className="w-full h-full">
+              <circle cx="100" cy="100" r="90" className="blob" />
+              <path d="M50 100 L100 60 L150 100" className="stroke" strokeWidth="4" strokeLinecap="round" fill="none" />
+              <circle cx="100" cy="60" r="12" className="top" />
+              <path d="M85 120 L115 120" className="bottom" strokeWidth="6" strokeLinecap="round" />
             </svg>
           </div>
         );
       case "burpee":
         return (
           <div className={baseClasses}>
-            <svg viewBox="0 0 200 200" className="w-32 h-32">
-              <circle cx="100" cy="100" r="90" fill="hsl(var(--primary))" opacity="0.1" />
-              <circle cx="100" cy="70" r="15" fill="hsl(var(--primary))" className="animate-bounce" />
-              <path d="M100 85 L100 125 M100 125 L75 155 M100 125 L125 155" stroke="hsl(var(--primary))" strokeWidth="4" strokeLinecap="round" />
-              <path d="M100 100 L70 115 M100 100 L130 115" stroke="hsl(var(--secondary))" strokeWidth="4" strokeLinecap="round" className="animate-pulse" />
+            <svg viewBox="0 0 200 200" className="w-full h-full">
+              <circle cx="100" cy="100" r="90" className="blob" />
+              <circle cx="100" cy="70" r="15" className="top" />
+              <path d="M100 85 L100 125 M100 125 L75 155 M100 125 L125 155" className="stroke" strokeWidth="4" strokeLinecap="round" />
+              <path d="M100 100 L70 115 M100 100 L130 115" className="bottom" strokeWidth="6" strokeLinecap="round" />
             </svg>
           </div>
         );
       case "jumping-jack":
         return (
           <div className={baseClasses}>
-            <svg viewBox="0 0 200 200" className="w-32 h-32">
-              <circle cx="100" cy="100" r="90" fill="hsl(var(--accent))" opacity="0.1" />
-              <circle cx="100" cy="65" r="14" fill="hsl(var(--primary))" />
-              <path d="M100 79 L100 130 M100 95 L65 85 M100 95 L135 85 M100 130 L75 165 M100 130 L125 165" stroke="hsl(var(--primary))" strokeWidth="4" strokeLinecap="round" className="animate-pulse" />
+            <svg viewBox="0 0 200 200" className="w-full h-full">
+              <circle cx="100" cy="100" r="90" className="blob" />
+              <circle cx="100" cy="65" r="14" className="top" />
+              <path d="M100 79 L100 130 M100 95 L65 85 M100 95 L135 85 M100 130 L75 165 M100 130 L125 165" className="stroke" strokeWidth="4" strokeLinecap="round" />
             </svg>
           </div>
         );
       case "high-knee":
         return (
           <div className={baseClasses}>
-            <svg viewBox="0 0 200 200" className="w-32 h-32">
-              <circle cx="100" cy="100" r="90" fill="hsl(var(--secondary))" opacity="0.1" />
-              <circle cx="100" cy="60" r="16" fill="hsl(var(--primary))" />
-              <path d="M100 76 L100 115 M100 115 L85 160 M100 115 L115 100" stroke="hsl(var(--primary))" strokeWidth="4" strokeLinecap="round" />
-              <circle cx="115" cy="100" r="8" fill="hsl(var(--secondary))" className="animate-bounce" />
+            <svg viewBox="0 0 200 200" className="w-full h-full">
+              <circle cx="100" cy="100" r="90" className="blob" />
+              <circle cx="100" cy="60" r="16" className="top" />
+              <path d="M100 76 L100 115 M100 115 L85 160 M100 115 L115 100" className="stroke" strokeWidth="4" strokeLinecap="round" />
+              <circle cx="115" cy="100" r="8" className="accent" />
             </svg>
           </div>
         );
       case "bicycle-crunch":
         return (
           <div className={baseClasses}>
-            <svg viewBox="0 0 200 200" className="w-32 h-32">
-              <circle cx="100" cy="100" r="90" fill="hsl(var(--primary))" opacity="0.1" />
-              <circle cx="100" cy="80" r="14" fill="hsl(var(--primary))" />
-              <ellipse cx="100" cy="120" rx="35" ry="25" fill="hsl(var(--secondary))" opacity="0.5" className="animate-pulse" />
-              <path d="M85 105 L70 135 M115 105 L130 135" stroke="hsl(var(--primary))" strokeWidth="4" strokeLinecap="round" />
+            <svg viewBox="0 0 200 200" className="w-full h-full">
+              <circle cx="100" cy="100" r="90" className="blob" />
+              <circle cx="100" cy="80" r="14" className="top" />
+              <ellipse cx="100" cy="120" rx="35" ry="25" className="bottom" opacity="0.7" />
+              <path d="M85 105 L70 135 M115 105 L130 135" className="stroke" strokeWidth="4" strokeLinecap="round" />
             </svg>
           </div>
         );
       case "wall-sit":
         return (
           <div className={baseClasses}>
-            <svg viewBox="0 0 200 200" className="w-32 h-32">
-              <circle cx="100" cy="100" r="90" fill="hsl(var(--accent))" opacity="0.1" />
-              <rect x="140" y="40" width="8" height="120" fill="hsl(var(--muted))" opacity="0.3" />
-              <circle cx="100" cy="70" r="15" fill="hsl(var(--primary))" />
-              <path d="M100 85 L100 115 M100 115 L75 115 M100 115 L125 115 M75 115 L75 145 M125 115 L125 145" stroke="hsl(var(--primary))" strokeWidth="4" strokeLinecap="round" />
+            <svg viewBox="0 0 200 200" className="w-full h-full">
+              <circle cx="100" cy="100" r="90" className="blob" />
+              <rect x="140" y="40" width="8" height="120" className="equip" opacity="0.4" />
+              <circle cx="100" cy="70" r="15" className="top" />
+              <path d="M100 85 L100 115 M100 115 L75 115 M100 115 L125 115 M75 115 L75 145 M125 115 L125 145" className="stroke" strokeWidth="4" strokeLinecap="round" />
             </svg>
           </div>
         );
       case "tricep-dip":
         return (
           <div className={baseClasses}>
-            <svg viewBox="0 0 200 200" className="w-32 h-32">
-              <circle cx="100" cy="100" r="90" fill="hsl(var(--secondary))" opacity="0.1" />
-              <rect x="60" y="95" width="80" height="8" rx="4" fill="hsl(var(--muted))" opacity="0.4" />
-              <circle cx="100" cy="70" r="14" fill="hsl(var(--primary))" />
-              <path d="M100 84 L100 110 M85 95 L75 110 M115 95 L125 110" stroke="hsl(var(--primary))" strokeWidth="4" strokeLinecap="round" className="animate-pulse" />
+            <svg viewBox="0 0 200 200" className="w-full h-full">
+              <circle cx="100" cy="100" r="90" className="blob" />
+              <rect x="60" y="95" width="80" height="8" rx="4" className="equip" opacity="0.5" />
+              <circle cx="100" cy="70" r="14" className="top" />
+              <path d="M100 84 L100 110 M85 95 L75 110 M115 95 L125 110" className="stroke" strokeWidth="4" strokeLinecap="round" />
             </svg>
           </div>
         );
       case "russian-twist":
         return (
           <div className={baseClasses}>
-            <svg viewBox="0 0 200 200" className="w-32 h-32">
-              <circle cx="100" cy="100" r="90" fill="hsl(var(--primary))" opacity="0.1" />
-              <circle cx="100" cy="85" r="14" fill="hsl(var(--primary))" />
-              <ellipse cx="100" cy="115" rx="40" ry="20" fill="hsl(var(--secondary))" opacity="0.5" />
-              <path d="M100 100 L65 110 M100 100 L135 110" stroke="hsl(var(--primary))" strokeWidth="4" strokeLinecap="round" className="animate-pulse" />
-              <circle cx="65" cy="110" r="6" fill="hsl(var(--accent))" className="animate-pulse" />
+            <svg viewBox="0 0 200 200" className="w-full h-full">
+              <circle cx="100" cy="100" r="90" className="blob" />
+              <circle cx="100" cy="85" r="14" className="top" />
+              <ellipse cx="100" cy="115" rx="40" ry="20" className="bottom" opacity="0.6" />
+              <path d="M100 100 L65 110 M100 100 L135 110" className="stroke" strokeWidth="4" strokeLinecap="round" />
+              <circle cx="65" cy="110" r="6" className="accent" />
             </svg>
           </div>
         );
@@ -398,16 +398,15 @@ const ExerciseAnimation = ({ animation }: { animation: string }) => {
   };
 
   return (
-    <div className="relative w-full h-48 bg-gradient-to-br from-primary/5 via-secondary/5 to-accent/5 rounded-lg overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-br from-transparent via-background/20 to-background/40" />
-      {getIllustration()}
-      <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/30 to-transparent flex items-end justify-center pb-4">
-        <div className="flex items-center gap-2 text-sm font-medium text-primary">
-          <Play className="h-4 w-4" />
-          <span>View Details</span>
-        </div>
+    <figure 
+      className="fit-illust fit-illust--md fit-illust--framed w-full" 
+      role="img" 
+      aria-label={`${name} exercise illustration`}
+    >
+      <div className="relative w-full aspect-square">
+        {getIllustration()}
       </div>
-    </div>
+    </figure>
   );
 };
 
@@ -456,20 +455,24 @@ export const Exercise = () => {
         {filteredExercises.map((exercise) => (
           <Card 
             key={exercise.id} 
-            className="hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer group"
+            className="hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer group overflow-hidden"
             onClick={() => setSelectedExercise(exercise)}
           >
             <CardHeader className="pb-3">
-              <ExerciseAnimation animation={exercise.animation} />
-              <div className="flex items-start justify-between pt-3">
+              <div className="flex justify-center mb-3">
+                <ExerciseAnimation animation={exercise.animation} name={exercise.name} />
+              </div>
+              <div className="flex items-start justify-between">
                 <div className="space-y-1 flex-1">
                   <div className="flex items-center gap-2">
-                    <span className="text-2xl">{getCategoryIcon(exercise.category)}</span>
                     <CardTitle className="text-lg group-hover:text-primary transition-colors">
                       {exercise.name}
                     </CardTitle>
                   </div>
-                  <CardDescription>{exercise.category}</CardDescription>
+                  <CardDescription className="flex items-center gap-1">
+                    <span>{getCategoryIcon(exercise.category)}</span>
+                    {exercise.category}
+                  </CardDescription>
                 </div>
                 <Badge variant="secondary" className={getDifficultyColor(exercise.difficulty)}>
                   {exercise.difficulty}
@@ -566,7 +569,7 @@ export const Exercise = () => {
 
               <div className="space-y-6">
                 {/* Animation */}
-                <ExerciseAnimation animation={selectedExercise.animation} />
+                <ExerciseAnimation animation={selectedExercise.animation} name={selectedExercise.name} />
 
                 {/* Quick Stats */}
                 <div className="grid grid-cols-2 gap-4">
