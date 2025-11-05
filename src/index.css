@@ -194,4 +194,23 @@ All colors MUST be HSL.
     stroke-linecap: round;
     stroke-linejoin: round;
   }
+
+  /* Reduced motion support */
+  @media (prefers-reduced-motion: reduce) {
+    .anim-src {
+      display: none;
+    }
+    .still-src {
+      display: block;
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .anim-src {
+      display: block;
+    }
+    .still-src {
+      display: none;
+    }
+  }
 }
