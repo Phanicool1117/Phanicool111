@@ -1,9 +1,23 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dumbbell, Clock, Target, Flame, Play, X, ChevronRight } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+
+// TypeScript declaration for Lottie player
+declare global {
+  namespace JSX {
+    interface IntrinsicElements {
+      'lottie-player': any;
+    }
+  }
+}
+
+// Load Lottie player
+if (typeof window !== 'undefined') {
+  import('@lottiefiles/lottie-player');
+}
 
 const exercises = [
   {
@@ -255,6 +269,8 @@ const getCategoryIcon = (category: string) => {
 };
 
 const ExerciseAnimation = ({ animation, name }: { animation: string; name: string }) => {
+  const [useLottie] = useState(false); // Toggle to true when Lottie files are available
+
   const getIllustration = () => {
     const baseClasses = "absolute inset-0 flex items-center justify-center";
     
@@ -396,6 +412,27 @@ const ExerciseAnimation = ({ animation, name }: { animation: string; name: strin
         return null;
     }
   };
+
+  if (useLottie) {
+    return (
+      <figure 
+        className="fit-illust fit-illust--md fit-illust--framed w-full" 
+        role="img" 
+        aria-label={`${name} exercise animation`}
+      >
+        <div className="relative w-full aspect-square">
+          <lottie-player
+            src={`/assets/exercises/${animation}.json`}
+            background="transparent"
+            speed="1"
+            style={{ width: '100%', height: '100%' }}
+            loop
+            autoplay
+          />
+        </div>
+      </figure>
+    );
+  }
 
   return (
     <figure 
