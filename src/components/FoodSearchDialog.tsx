@@ -6,6 +6,7 @@ import { Search, Loader2, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { supabase } from "@/integrations/supabase/client";
 
 type FoodItem = {
   name: string;
@@ -38,12 +39,18 @@ export const FoodSearchDialog = ({ open, onOpenChange, onAddFood }: FoodSearchDi
 
     setIsSearching(true);
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error("Not authenticated");
+      }
+
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/food-search`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            "Authorization": `Bearer ${session.access_token}`,
           },
           body: JSON.stringify({
             query: searchQuery,
