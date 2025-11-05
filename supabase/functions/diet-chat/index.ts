@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -44,12 +45,45 @@ serve(async (req) => {
   }
 
   try {
-    // Rate limiting
-    const clientIp = req.headers.get("x-forwarded-for") || "unknown";
-    if (!checkRateLimit(clientIp)) {
-      console.log(`Rate limit exceeded for IP: ${clientIp}`);
+    // Create Supabase client
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      { global: { headers: { Authorization: req.headers.get('Authorization')! } } }
+    );
+
+    // Authenticate user
+    const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
+    if (authError || !user) {
       return new Response(
-        JSON.stringify({ error: "Rate limit exceeded. Please try again later." }),
+        JSON.stringify({ error: "Authentication required" }),
+        {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    // Check user-based rate limit (50 requests per day for chat)
+    const { data: rateLimitOk, error: rateLimitError } = await supabaseClient.rpc(
+      'check_rate_limit',
+      { _user_id: user.id, _function_name: 'diet-chat', _daily_limit: 50 }
+    );
+
+    if (rateLimitError) {
+      console.error('Rate limit check error:', rateLimitError);
+      return new Response(
+        JSON.stringify({ error: "Rate limit check failed" }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    if (!rateLimitOk) {
+      return new Response(
+        JSON.stringify({ error: "Daily chat limit exceeded. Please try again tomorrow." }),
         {
           status: 429,
           headers: { ...corsHeaders, "Content-Type": "application/json" },

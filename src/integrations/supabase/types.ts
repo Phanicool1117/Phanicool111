@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      api_usage: {
+        Row: {
+          created_at: string
+          daily_limit: number
+          function_name: string
+          id: string
+          last_request: string
+          request_count: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          daily_limit?: number
+          function_name: string
+          id?: string
+          last_request?: string
+          request_count?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          daily_limit?: number
+          function_name?: string
+          id?: string
+          last_request?: string
+          request_count?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       audit_logs: {
         Row: {
           action: string
@@ -315,7 +348,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      check_rate_limit: {
+        Args: {
+          _daily_limit?: number
+          _function_name: string
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
