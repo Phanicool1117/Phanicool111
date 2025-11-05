@@ -3,6 +3,20 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Trash2 } from "lucide-react";
+import { toast } from "sonner";
+import { logAuditEvent } from "@/lib/auditLog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 type Meal = {
   id: string;
@@ -19,6 +33,8 @@ type Meal = {
 
 export const MealHistory = () => {
   const [meals, setMeals] = useState<Meal[]>([]);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [mealToDelete, setMealToDelete] = useState<Meal | null>(null);
 
   useEffect(() => {
     fetchRecentMeals();
@@ -43,6 +59,46 @@ export const MealHistory = () => {
       .limit(10);
 
     if (data) setMeals(data);
+  };
+
+  const handleDeleteClick = (meal: Meal) => {
+    setMealToDelete(meal);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!mealToDelete) return;
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { error } = await supabase
+        .from("meals")
+        .delete()
+        .eq("id", mealToDelete.id)
+        .eq("user_id", user.id);
+
+      if (error) throw error;
+
+      await logAuditEvent(
+        "delete",
+        "meals",
+        mealToDelete.id,
+        mealToDelete,
+        null
+      );
+
+      setMeals(meals.filter(m => m.id !== mealToDelete.id));
+      toast.success("Meal deleted successfully");
+      window.dispatchEvent(new Event('meals-updated'));
+    } catch (error) {
+      console.error("Error deleting meal:", error);
+      toast.error("Failed to delete meal");
+    } finally {
+      setDeleteDialogOpen(false);
+      setMealToDelete(null);
+    }
   };
 
   const getMealTypeColor = (type: string) => {
@@ -94,21 +150,48 @@ export const MealHistory = () => {
                     <p className="text-sm text-muted-foreground italic">{meal.notes}</p>
                   )}
                 </div>
-                <div className="text-right space-y-1 ml-4">
-                  {meal.calories && (
-                    <p className="text-sm font-medium">{meal.calories} cal</p>
-                  )}
-                  <div className="text-xs text-muted-foreground space-y-0.5">
-                    {meal.protein !== undefined && meal.protein !== null && <p>P: {Number(meal.protein).toFixed(1)}g</p>}
-                    {meal.carbs !== undefined && meal.carbs !== null && <p>C: {Number(meal.carbs).toFixed(1)}g</p>}
-                    {meal.fats !== undefined && meal.fats !== null && <p>F: {Number(meal.fats).toFixed(1)}g</p>}
+                <div className="flex items-start gap-2">
+                  <div className="text-right space-y-1">
+                    {meal.calories && (
+                      <p className="text-sm font-medium">{meal.calories} cal</p>
+                    )}
+                    <div className="text-xs text-muted-foreground space-y-0.5">
+                      {meal.protein !== undefined && meal.protein !== null && <p>P: {Number(meal.protein).toFixed(1)}g</p>}
+                      {meal.carbs !== undefined && meal.carbs !== null && <p>C: {Number(meal.carbs).toFixed(1)}g</p>}
+                      {meal.fats !== undefined && meal.fats !== null && <p>F: {Number(meal.fats).toFixed(1)}g</p>}
+                    </div>
                   </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleDeleteClick(meal)}
+                    className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
                 </div>
               </div>
             ))}
           </div>
         )}
       </CardContent>
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Meal</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{mealToDelete?.meal_name}"? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteConfirm} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 };
