@@ -31,14 +31,26 @@ const App = () => {
       }
     });
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
       
       if (session?.user) {
         checkOnboardingStatus(session.user.id);
       } else {
-        setLoading(false);
+        // Auto-create anonymous account for new users
+        const { data, error } = await supabase.auth.signUp({
+          email: `user_${Date.now()}_${Math.random().toString(36).substring(7)}@temp.local`,
+          password: crypto.randomUUID(),
+        });
+        
+        if (data?.user && !error) {
+          setSession(data.session);
+          setUser(data.user);
+          setLoading(false);
+        } else {
+          setLoading(false);
+        }
       }
     });
 
