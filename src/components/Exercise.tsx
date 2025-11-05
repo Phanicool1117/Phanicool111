@@ -269,51 +269,6 @@ const getCategoryIcon = (category: string) => {
 };
 
 const ExerciseAnimation = ({ animation, name }: { animation: string; name: string }) => {
-  // Map animation names to asset filenames
-  const assetMap: Record<string, string> = {
-    'jumping-jack': 'jumping-jacks',
-    'squat': 'squat',
-    'push-up': 'push-up',
-    'plank': 'plank',
-    'lunge': 'lunges',
-    'mountain-climber': 'mountain-climbers',
-    'burpee': 'burpees',
-    'high-knee': 'high-knees',
-    'bicycle-crunch': 'bicycle-crunches',
-    'wall-sit': 'wall-sit',
-    'tricep-dip': 'tricep-dips',
-    'russian-twist': 'russian-twists'
-  };
-
-  const assetName = assetMap[animation] || animation;
-  const hasAsset = ['jumping-jacks', 'squat', 'dumbbell-curl', 'treadmill', 'hula-hoop'].includes(assetName);
-
-  if (hasAsset) {
-    return (
-      <figure 
-        className="fit-illust fit-illust--md" 
-        role="img" 
-        aria-label={`${name} exercise animation`}
-      >
-        <img 
-          className="anim-src" 
-          src={`/assets/exercises/${assetName}.webp`} 
-          alt={`${name} animation`} 
-          width="320" 
-          height="320"
-        />
-        <img 
-          className="still-src" 
-          src={`/assets/exercises/${assetName}-still.png`} 
-          alt={`${name} still`} 
-          width="320" 
-          height="320"
-        />
-      </figure>
-    );
-  }
-
-  // SVG fallback for exercises without assets
   const getIllustration = () => {
     const baseClasses = "absolute inset-0 flex items-center justify-center";
     
@@ -322,10 +277,21 @@ const ExerciseAnimation = ({ animation, name }: { animation: string; name: strin
         return (
           <div className={baseClasses}>
             <svg viewBox="0 0 200 200" className="w-full h-full">
-              <circle cx="100" cy="100" r="90" className="blob" />
-              <path d="M60 120 L140 120 M100 80 L100 160" className="stroke" strokeWidth="4" strokeLinecap="round" />
-              <circle cx="100" cy="80" r="15" className="top" />
-              <rect x="85" y="100" width="30" height="50" rx="5" className="bottom" />
+              <circle cx="100" cy="100" r="90" className="fill-primary/10" />
+              <path d="M60 120 L140 120 M100 80 L100 160" className="stroke-primary" strokeWidth="4" strokeLinecap="round" />
+              <circle cx="100" cy="80" r="15" className="fill-primary/30" />
+              <rect x="85" y="100" width="30" height="50" rx="5" className="fill-primary/20" />
+            </svg>
+          </div>
+        );
+      case "squat":
+        return (
+          <div className={baseClasses}>
+            <svg viewBox="0 0 200 200" className="w-full h-full">
+              <circle cx="100" cy="100" r="90" className="fill-primary/10" />
+              <circle cx="100" cy="60" r="18" className="fill-primary/30" />
+              <path d="M100 78 L100 120 M100 120 L75 160 M100 120 L125 160" className="stroke-primary" strokeWidth="4" strokeLinecap="round" />
+              <path d="M100 95 L70 110 M100 95 L130 110" className="stroke-primary/60" strokeWidth="6" strokeLinecap="round" />
             </svg>
           </div>
         );
@@ -333,11 +299,11 @@ const ExerciseAnimation = ({ animation, name }: { animation: string; name: strin
         return (
           <div className={baseClasses}>
             <svg viewBox="0 0 200 200" className="w-full h-full">
-              <circle cx="100" cy="100" r="90" className="blob" />
-              <line x1="50" y1="110" x2="150" y2="110" className="stroke" strokeWidth="6" strokeLinecap="round" />
-              <circle cx="60" cy="110" r="8" className="top" />
-              <circle cx="140" cy="110" r="8" className="top" />
-              <rect x="75" y="80" width="50" height="30" rx="8" className="bottom" />
+              <circle cx="100" cy="100" r="90" className="fill-primary/10" />
+              <line x1="50" y1="110" x2="150" y2="110" className="stroke-primary" strokeWidth="6" strokeLinecap="round" />
+              <circle cx="60" cy="110" r="8" className="fill-primary/30" />
+              <circle cx="140" cy="110" r="8" className="fill-primary/30" />
+              <rect x="75" y="80" width="50" height="30" rx="8" className="fill-primary/20" />
             </svg>
           </div>
         );
@@ -345,10 +311,10 @@ const ExerciseAnimation = ({ animation, name }: { animation: string; name: strin
         return (
           <div className={baseClasses}>
             <svg viewBox="0 0 200 200" className="w-full h-full">
-              <circle cx="100" cy="100" r="90" className="blob" />
-              <circle cx="100" cy="50" r="16" className="top" />
-              <path d="M100 66 L100 110 M100 110 L70 160 M100 110 L130 140" className="stroke" strokeWidth="4" strokeLinecap="round" />
-              <circle cx="70" cy="160" r="6" className="accent" />
+              <circle cx="100" cy="100" r="90" className="fill-primary/10" />
+              <circle cx="100" cy="50" r="16" className="fill-primary/30" />
+              <path d="M100 66 L100 110 M100 110 L70 160 M100 110 L130 140" className="stroke-primary" strokeWidth="4" strokeLinecap="round" />
+              <circle cx="70" cy="160" r="6" className="fill-accent" />
             </svg>
           </div>
         );
@@ -356,10 +322,10 @@ const ExerciseAnimation = ({ animation, name }: { animation: string; name: strin
         return (
           <div className={baseClasses}>
             <svg viewBox="0 0 200 200" className="w-full h-full">
-              <circle cx="100" cy="100" r="90" className="blob" />
-              <path d="M50 100 L100 60 L150 100" className="stroke" strokeWidth="4" strokeLinecap="round" fill="none" />
-              <circle cx="100" cy="60" r="12" className="top" />
-              <path d="M85 120 L115 120" className="bottom" strokeWidth="6" strokeLinecap="round" />
+              <circle cx="100" cy="100" r="90" className="fill-primary/10" />
+              <path d="M50 100 L100 60 L150 100" className="stroke-primary" strokeWidth="4" strokeLinecap="round" fill="none" />
+              <circle cx="100" cy="60" r="12" className="fill-primary/30" />
+              <path d="M85 120 L115 120" className="stroke-primary/60" strokeWidth="6" strokeLinecap="round" />
             </svg>
           </div>
         );
@@ -367,10 +333,20 @@ const ExerciseAnimation = ({ animation, name }: { animation: string; name: strin
         return (
           <div className={baseClasses}>
             <svg viewBox="0 0 200 200" className="w-full h-full">
-              <circle cx="100" cy="100" r="90" className="blob" />
-              <circle cx="100" cy="70" r="15" className="top" />
-              <path d="M100 85 L100 125 M100 125 L75 155 M100 125 L125 155" className="stroke" strokeWidth="4" strokeLinecap="round" />
-              <path d="M100 100 L70 115 M100 100 L130 115" className="bottom" strokeWidth="6" strokeLinecap="round" />
+              <circle cx="100" cy="100" r="90" className="fill-primary/10" />
+              <circle cx="100" cy="70" r="15" className="fill-primary/30" />
+              <path d="M100 85 L100 125 M100 125 L75 155 M100 125 L125 155" className="stroke-primary" strokeWidth="4" strokeLinecap="round" />
+              <path d="M100 100 L70 115 M100 100 L130 115" className="stroke-primary/60" strokeWidth="6" strokeLinecap="round" />
+            </svg>
+          </div>
+        );
+      case "jumping-jack":
+        return (
+          <div className={baseClasses}>
+            <svg viewBox="0 0 200 200" className="w-full h-full">
+              <circle cx="100" cy="100" r="90" className="fill-primary/10" />
+              <circle cx="100" cy="65" r="14" className="fill-primary/30" />
+              <path d="M100 79 L100 130 M100 95 L65 85 M100 95 L135 85 M100 130 L75 165 M100 130 L125 165" className="stroke-primary" strokeWidth="4" strokeLinecap="round" />
             </svg>
           </div>
         );
@@ -378,10 +354,10 @@ const ExerciseAnimation = ({ animation, name }: { animation: string; name: strin
         return (
           <div className={baseClasses}>
             <svg viewBox="0 0 200 200" className="w-full h-full">
-              <circle cx="100" cy="100" r="90" className="blob" />
-              <circle cx="100" cy="60" r="16" className="top" />
-              <path d="M100 76 L100 115 M100 115 L85 160 M100 115 L115 100" className="stroke" strokeWidth="4" strokeLinecap="round" />
-              <circle cx="115" cy="100" r="8" className="accent" />
+              <circle cx="100" cy="100" r="90" className="fill-primary/10" />
+              <circle cx="100" cy="60" r="16" className="fill-primary/30" />
+              <path d="M100 76 L100 115 M100 115 L85 160 M100 115 L115 100" className="stroke-primary" strokeWidth="4" strokeLinecap="round" />
+              <circle cx="115" cy="100" r="8" className="fill-accent" />
             </svg>
           </div>
         );
@@ -389,10 +365,10 @@ const ExerciseAnimation = ({ animation, name }: { animation: string; name: strin
         return (
           <div className={baseClasses}>
             <svg viewBox="0 0 200 200" className="w-full h-full">
-              <circle cx="100" cy="100" r="90" className="blob" />
-              <circle cx="100" cy="80" r="14" className="top" />
-              <ellipse cx="100" cy="120" rx="35" ry="25" className="bottom" opacity="0.7" />
-              <path d="M85 105 L70 135 M115 105 L130 135" className="stroke" strokeWidth="4" strokeLinecap="round" />
+              <circle cx="100" cy="100" r="90" className="fill-primary/10" />
+              <circle cx="100" cy="80" r="14" className="fill-primary/30" />
+              <ellipse cx="100" cy="120" rx="35" ry="25" className="fill-primary/20" opacity="0.7" />
+              <path d="M85 105 L70 135 M115 105 L130 135" className="stroke-primary" strokeWidth="4" strokeLinecap="round" />
             </svg>
           </div>
         );
@@ -400,10 +376,10 @@ const ExerciseAnimation = ({ animation, name }: { animation: string; name: strin
         return (
           <div className={baseClasses}>
             <svg viewBox="0 0 200 200" className="w-full h-full">
-              <circle cx="100" cy="100" r="90" className="blob" />
-              <rect x="140" y="40" width="8" height="120" className="equip" opacity="0.4" />
-              <circle cx="100" cy="70" r="15" className="top" />
-              <path d="M100 85 L100 115 M100 115 L75 115 M100 115 L125 115 M75 115 L75 145 M125 115 L125 145" className="stroke" strokeWidth="4" strokeLinecap="round" />
+              <circle cx="100" cy="100" r="90" className="fill-primary/10" />
+              <rect x="140" y="40" width="8" height="120" className="fill-muted/40" opacity="0.4" />
+              <circle cx="100" cy="70" r="15" className="fill-primary/30" />
+              <path d="M100 85 L100 115 M100 115 L75 115 M100 115 L125 115 M75 115 L75 145 M125 115 L125 145" className="stroke-primary" strokeWidth="4" strokeLinecap="round" />
             </svg>
           </div>
         );
@@ -411,10 +387,10 @@ const ExerciseAnimation = ({ animation, name }: { animation: string; name: strin
         return (
           <div className={baseClasses}>
             <svg viewBox="0 0 200 200" className="w-full h-full">
-              <circle cx="100" cy="100" r="90" className="blob" />
-              <rect x="60" y="95" width="80" height="8" rx="4" className="equip" opacity="0.5" />
-              <circle cx="100" cy="70" r="14" className="top" />
-              <path d="M100 84 L100 110 M85 95 L75 110 M115 95 L125 110" className="stroke" strokeWidth="4" strokeLinecap="round" />
+              <circle cx="100" cy="100" r="90" className="fill-primary/10" />
+              <rect x="60" y="95" width="80" height="8" rx="4" className="fill-muted/50" opacity="0.5" />
+              <circle cx="100" cy="70" r="14" className="fill-primary/30" />
+              <path d="M100 84 L100 110 M85 95 L75 110 M115 95 L125 110" className="stroke-primary" strokeWidth="4" strokeLinecap="round" />
             </svg>
           </div>
         );
@@ -422,11 +398,11 @@ const ExerciseAnimation = ({ animation, name }: { animation: string; name: strin
         return (
           <div className={baseClasses}>
             <svg viewBox="0 0 200 200" className="w-full h-full">
-              <circle cx="100" cy="100" r="90" className="blob" />
-              <circle cx="100" cy="85" r="14" className="top" />
-              <ellipse cx="100" cy="115" rx="40" ry="20" className="bottom" opacity="0.6" />
-              <path d="M100 100 L65 110 M100 100 L135 110" className="stroke" strokeWidth="4" strokeLinecap="round" />
-              <circle cx="65" cy="110" r="6" className="accent" />
+              <circle cx="100" cy="100" r="90" className="fill-primary/10" />
+              <circle cx="100" cy="85" r="14" className="fill-primary/30" />
+              <ellipse cx="100" cy="115" rx="40" ry="20" className="fill-primary/20" opacity="0.6" />
+              <path d="M100 100 L65 110 M100 100 L135 110" className="stroke-primary" strokeWidth="4" strokeLinecap="round" />
+              <circle cx="65" cy="110" r="6" className="fill-accent" />
             </svg>
           </div>
         );
@@ -436,15 +412,9 @@ const ExerciseAnimation = ({ animation, name }: { animation: string; name: strin
   };
 
   return (
-    <figure 
-      className="fit-illust fit-illust--md fit-illust--framed w-full" 
-      role="img" 
-      aria-label={`${name} exercise illustration`}
-    >
-      <div className="relative w-full aspect-square">
-        {getIllustration()}
-      </div>
-    </figure>
+    <div className="relative w-full aspect-square bg-gradient-to-br from-primary/5 to-primary/10 rounded-lg overflow-hidden">
+      {getIllustration()}
+    </div>
   );
 };
 
